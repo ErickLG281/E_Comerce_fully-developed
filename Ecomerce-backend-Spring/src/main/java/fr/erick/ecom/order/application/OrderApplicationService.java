@@ -9,14 +9,17 @@ import fr.erick.ecom.order.domain.orderd.service.OrderReader;
 import fr.erick.ecom.order.domain.orderd.service.OrderUpdater;
 import fr.erick.ecom.order.domain.orderd.vo.StripeSessionId;
 import fr.erick.ecom.order.domain.user.aggregate.User;
+import fr.erick.ecom.order.domain.user.repository.UserRectiveRepository;
 import fr.erick.ecom.order.infrastructure.secondary.service.stripe.StripeService;
 import fr.erick.ecom.product.application.ProductsApplicationService;
 import fr.erick.ecom.product.domain.aggregate.Product;
 import fr.erick.ecom.product.domain.vo.PublicId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -29,6 +32,9 @@ public class OrderApplicationService {
   private final OrderCreator orderCreator;
   private final OrderUpdater orderUpdater;
   private final OrderReader orderReader;
+
+  @Autowired
+  UserRectiveRepository userRectiveRepository;
 
   public OrderApplicationService(ProductsApplicationService productsApplicationService,
                                  UsersApplicationService usersApplicationService,
@@ -48,6 +54,15 @@ public class OrderApplicationService {
     List<Product> productsInformation = productsApplicationService.getProductsByPublicIdsIn(publicIds);
     return cartReader.getDetails(productsInformation);
   }
+
+  @Transactional(readOnly = true)
+  public Mono<DetailCartItemRequest> saveShoppingCart(DetailCartItemRequest detailcart, String email){
+   return userRectiveRepository.getUsernameByEmail(email)
+     .map(user -> {
+       return detailcart;
+     });
+  }
+
 
   @Transactional
   public StripeSessionId createOrder(List<DetailCartItemRequest> items) {
@@ -74,5 +89,14 @@ public class OrderApplicationService {
   @Transactional(readOnly = true)
   public Page<Order> findOrdersForAdmin(Pageable pageable) {
     return orderReader.findAll(pageable);
+  }
+
+  @Transactional(readOnly = true)
+  public Mono<DetailCartResponse> getCartDetailsReactive(List<DetailCartItemRequest> cartItemRequests) {
+
+    List<PublicId> publicIds = cartItemRequests.stream().map(DetailCartItemRequest::productId).toList();
+    return productsApplicationService.getProductsByPublicIdsIn(publicIds) // (1)
+      .map(productsInformation -> cartReader.getDetails(productsInformation, cartItemRequests)); // (2)
+
   }
 }

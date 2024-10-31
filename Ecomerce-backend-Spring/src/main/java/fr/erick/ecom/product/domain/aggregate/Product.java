@@ -1,6 +1,6 @@
 package fr.erick.ecom.product.domain.aggregate;
 
-import fr.codecake.ecom.product.domain.vo.*;
+
 import fr.erick.ecom.product.domain.vo.*;
 import fr.erick.ecom.shared.error.domain.Assert;
 import org.jilt.Builder;

@@ -1,7 +1,6 @@
 package fr.erick.ecom.order.domain.orderd.service;
 
 import fr.erick.ecom.order.domain.orderd.aggregate.DetailCartResponse;
-import fr.codecake.ecom.order.domain.order.aggregate.DetailCartResponseBuilder;
 import fr.erick.ecom.product.domain.aggregate.Product;
 import fr.erick.ecom.product.domain.aggregate.ProductCart;
 

@@ -6,11 +6,12 @@ import fr.erick.ecom.product.domain.aggregate.Product;
 import fr.erick.ecom.product.domain.vo.PublicId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface ProductRepository {
+public interface ProductRepository  {
 
   Product save(Product productToCreate);
 

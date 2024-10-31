@@ -8,10 +8,8 @@ import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import fr.erick.ecom.order.application.OrderApplicationService;
 import fr.erick.ecom.order.domain.orderd.CartPaymentException;
-import fr.codecake.ecom.order.domain.order.aggregate.*;
 import fr.erick.ecom.order.domain.orderd.aggregate.*;
 import fr.erick.ecom.order.domain.orderd.vo.StripeSessionId;
-import fr.codecake.ecom.order.domain.user.vo.*;
 import fr.erick.ecom.order.domain.user.vo.UserAddress;
 import fr.erick.ecom.order.domain.user.vo.UserAddressToUpdate;
 import fr.erick.ecom.order.domain.user.vo.UserPublicId;
@@ -23,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,12 +42,22 @@ public class OrderResource {
     this.orderApplicationService = orderApplicationService;
   }
 
+  @PreAuthorize("hasAnyAuthority('SCOPE_client')")
+  @GetMapping("/get-cart-detailsReactive")
+  public Mono<DetailCartResponse> getDetailsReactive(@RequestParam List<UUID> productIds) {
+    List<DetailCartItemRequest> cartItemRequests = productIds.stream()
+      .map(uuid -> new DetailCartItemRequest(new PublicId(uuid), 1))
+      .toList();
+    return orderApplicationService.getCartDetailsReactive(cartItemRequests);
+  }
+
   @GetMapping("/get-cart-details")
   public ResponseEntity<RestDetailCartResponse> getDetails(@RequestParam List<UUID> productIds) {
     List<DetailCartItemRequest> cartItemRequests = productIds.stream()
       .map(uuid -> new DetailCartItemRequest(new PublicId(uuid), 1))
       .toList();
 
+    Object DetailCartRequestBuilder;
     DetailCartRequest detailCartRequest = DetailCartRequestBuilder.detailCartRequest().items(cartItemRequests).build();
     DetailCartResponse cartDetails = orderApplicationService.getCartDetails(detailCartRequest);
     return ResponseEntity.ok(RestDetailCartResponse.from(cartDetails));
